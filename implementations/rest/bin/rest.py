@@ -31,12 +31,27 @@ from croniter import croniter
            
 #set up logging
 logging.root
-logging.root.setLevel(logging.ERROR)
+logging.root.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(levelname)s %(message)s')
 #with zero args , should go to STD ERR
 handler = logging.StreamHandler()
 handler.setFormatter(formatter)
 logging.root.addHandler(handler)
+
+try: # for Python 3
+    from http.client import HTTPConnection
+except ImportError:
+    from httplib import HTTPConnection
+    HTTPConnection.debuglevel = 10
+
+# This is dumb, but requests uses urllib3 which uses httplib which logs
+# debug output to stdout, not stderr.  So we shuffle the real stdout
+# handle to splunk_output and make sys.stdout = sys.stderr to outsmart
+# httplib.
+splunk_output = sys.stdout
+sys.stdout = sys.stderr
+
+
 
 SCHEME = """<scheme>
     <title>REST</title>
@@ -555,7 +570,7 @@ def do_run(config,endpoint_list):
                         error_event=""
                         error_event += 'http_error_code = %s error_message = %s' % (error_http_code, error_output) 
                         print_xml_single_instance_mode(error_event)
-                        sys.stdout.flush()
+                        splunk_output.flush()
                     logging.error("HTTP Request error: %s" % str(e))
                     time.sleep(float(backoff_time))
                     continue
@@ -640,22 +655,22 @@ def handle_output(response,output,type,req_args,endpoint):
             search_result = REGEX_PATTERN.search(output)
             if search_result == None:
                 return   
-        RESPONSE_HANDLER_INSTANCE(response,output,type,req_args,endpoint)
-        sys.stdout.flush()               
+        RESPONSE_HANDLER_INSTANCE(response,output,type,req_args,endpoint,splunk_output)
+        splunk_output.flush()
     except RuntimeError,e:
         logging.error("Looks like an error handle the response output: %s" % str(e))
 
 # prints validation error data to be consumed by Splunk
 def print_validation_error(s):
-    print "<error><message>%s</message></error>" % encodeXMLText(s)
+    print >>splunk_output, "<error><message>%s</message></error>" % encodeXMLText(s)
     
 # prints XML stream
 def print_xml_single_instance_mode(s):
-    print "<stream><event><data>%s</data></event></stream>" % encodeXMLText(s)
+    print >>splunk_output, "<stream><event><data>%s</data></event></stream>" % encodeXMLText(s)
     
 # prints simple stream
 def print_simple(s):
-    print "%s\n" % s
+    print >>splunk_output, "%s\n" % s
 
 def encodeXMLText(text):
     text = text.replace("&", "&amp;")
@@ -666,12 +681,12 @@ def encodeXMLText(text):
     return text
   
 def usage():
-    print "usage: %s [--scheme|--validate-arguments]"
+    print >>splunk_output, "usage: %s [--scheme|--validate-arguments]"
     logging.error("Incorrect Program Usage")
     sys.exit(2)
 
 def do_scheme():
-    print SCHEME
+    print >>splunk_output, SCHEME
 
 #read XML configuration passed from splunkd, need to refactor to support single instance mode
 def get_input_config():
