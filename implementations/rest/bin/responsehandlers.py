@@ -2,6 +2,7 @@
 import json
 import datetime
 import sys
+import re
 from datetime import datetime,timedelta
 
 #the default handler , does nothing , just passes the raw output directly to STDOUT
@@ -499,6 +500,61 @@ class AlarmHandler:
         else:
             print_xml_stream(raw_response_output,handle)
                                                                                          
+class WindowsDefenderATPHandler:
+
+    # Bad hack follows.  Microsoft's API returns subseconds at a higher precision
+    # than python's datetime will allow.  So, I'm padding the subseconds in order
+    # to be able to do a string-comparison of timestamps (which is possible because
+    # they're in ISO-8601 form
+
+    def pad(t):
+        rexp = "^(?P<date>[-0-9T:]+)(?:\.(?P<subseconds>\d+))?(?P<zone>.*)?$"
+        x=re.match(rexp,t)
+        if x is None:
+            return t
+        y=x.groupdict()
+
+        if y.get('subseconds') is None:
+            y['subseconds'] = ""
+
+        if y.get('zone') in [ None, "" ]:
+            y['zone'] = "Z"
+
+        y['subseconds'] = (y['subseconds'] + '0000000000000')[0:7]
+
+        return "".join([
+            y['date'],
+            '.',
+            y['subseconds'],
+            y['zone']
+        ])
+
+    def __init__(self,**args):
+        pass
+
+    def __call__(self, response_object,raw_response_output,response_type,req_args,endpoint,handle=sys.stdout):
+
+        if not "params" in req_args:
+            req_args["params"] = {}
+
+        if "sinceTimeUtc" in req_args["params"]:
+            old_timestamp = req_args["params"]['sinceTimeUtc']
+        else:
+            old_timestamp = '1970-01-01T00:00:00.0000000Z'
+
+        if response_type == "json":
+            output = json.loads(raw_response_output)
+
+            for entry in output:
+                temp_timestamp = entry.get("LastProcessedTimeUtc")
+                if temp_timestamp > old_timestamp:
+                    old_timestamp = temp_timestamp
+                    req_args["params"]["sinceTimeUtc"]=old_timestamp
+
+                print_xml_stream(json.dumps(entry),handle)
+        else:
+            print_xml_stream(raw_response_output,handle)
+
 #HELPER FUNCTIONS
     
 # prints XML stream
