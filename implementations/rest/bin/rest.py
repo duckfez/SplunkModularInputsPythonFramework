@@ -15,7 +15,7 @@ REGEX_PATTERN = None
 EGG_DIR = SPLUNK_HOME + "/etc/apps/rest_ta/bin/"
 
 for filename in os.listdir(EGG_DIR):
-    if filename.endswith(".egg"):
+    if filename.endswith(".egg") or filename.endswith(".whl"):
         sys.path.append(EGG_DIR + filename) 
        
 import requests,json
@@ -482,6 +482,7 @@ def do_run(config,endpoint_list):
             token["expires_in"] = "5"
             client = WebApplicationClient(oauth2_client_id)
             oauth2 = OAuth2Session(client, token=token,auto_refresh_url=oauth2_refresh_url,auto_refresh_kwargs=oauth2_refresh_props,token_updater=oauth2_token_updater)
+            oauth2.proxies = proxies
         elif auth_type == "custom" and CUSTOM_AUTH_HANDLER_INSTANCE:
             auth = CUSTOM_AUTH_HANDLER_INSTANCE
    
