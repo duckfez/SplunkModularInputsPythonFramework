@@ -1,6 +1,5 @@
 #add your custom response handler class to this module
 import json
-import datetime
 import sys
 import re
 from datetime import datetime,timedelta
@@ -545,6 +544,9 @@ class WindowsDefenderATPHandler:
         if response_type == "json":
             output = json.loads(raw_response_output)
 
+            dt=datetime.utcnow().strftime("%m-%d-%Y %H:%M:%S +0000")
+            print_xml_stream("%s Good response from ATP API, %d records returned" % (dt,len(output)), handle, index="_internal", source="wdatp_status", sourcetype="microsoft:windows:defender:atp:status" )
+
             for entry in output:
                 temp_timestamp = entry.get("LastProcessedTimeUtc")
                 if temp_timestamp > old_timestamp:
@@ -558,10 +560,15 @@ class WindowsDefenderATPHandler:
 #HELPER FUNCTIONS
     
 # prints XML stream
-def print_xml_stream(s,handle=sys.stdout):
-    print >>handle,  "<stream><event unbroken=\"1\"><data>%s</data><done/></event></stream>" % encodeXMLText(s)
+def print_xml_stream(s,handle=sys.stdout,**kwargs):
+    metadata = ""
+    supported_kwargs = [ "index", "host", "source", "sourcetype", "time" ]
 
+    for x in kwargs:
+        if x in supported_kwargs:
+            metadata = metadata + "<%s>%s</%s>\n" % (x,kwargs[x],x)
 
+    print >>handle,  "<stream><event unbroken=\"1\">%s<data>%s</data><done/></event></stream>" % ( metadata, encodeXMLText(s) )
 
 def encodeXMLText(text):
     text = text.replace("&", "&amp;")
