@@ -37,7 +37,7 @@ request_timeout= <value>
 * time to wait for reconnect after timeout or error
 backoff_time = <value>
 
-*in seconds
+*in seconds, defaults to 300
 polling_interval= <value>
 
 * whether or not to index http error response codes

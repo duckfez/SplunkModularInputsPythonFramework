@@ -166,7 +166,7 @@ def do_run():
     config = get_input_config() 
     
     activation_key = config.get("activation_key")
-    app_name = "Command Modular Input"
+    app_name = "Tesla Vehicle Modular Input"
     
     m = hashlib.md5()
     m.update((app_name))

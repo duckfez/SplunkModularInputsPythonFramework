@@ -37,8 +37,8 @@ def send_message(settings):
         
         for number in numbers_list:  
             print >> sys.stderr, "INFO Sending SMS via Twilio from number=%s to number=%s with message=%s" % (from_number, number,message)   
-            message = client.messages.create(body=message,to=number,from_=from_number)    
-            print >> sys.stderr, "INFO Sent Twilio SMS message with sid=%s" % message.sid
+            message_resp = client.messages.create(body=message,to=number,from_=from_number)    
+            print >> sys.stderr, "INFO Sent Twilio SMS message with sid=%s" % message_resp.sid
           
         return True  
     except Exception as tre:  

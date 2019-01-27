@@ -1,3 +1,11 @@
+0.8.2
+-----
+* polling interval defaults to 300 , just a docs update
+
+0.8.1
+-----
+* authentication key verification fix
+
 0.8
 -----
 * minor manager xml ui tweak for 7.1

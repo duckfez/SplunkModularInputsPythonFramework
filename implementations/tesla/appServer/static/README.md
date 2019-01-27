@@ -1,4 +1,4 @@
-# Splunk Tesla Modular Input v0.8
+# Splunk Tesla Modular Input v0.8.2
 
 ## Overview
 
@@ -47,7 +47,11 @@ By default the following data is requested and returned in JSON format :
 There are default stanzas setup for each of these.
 
 Aside from "Vehicle List" . all of the other stanzas take a vehicle id which you can set via SplunkWeb.
+
 If you have more than 1 vehicle , you can clone the default stanzas and setup your other vehicle id(s).
+
+Note : the "Vehicle ID" is actually the "ID" in the vehicle list... NOT the "vehicle_id". Ex: "{"response":[{"id":48.............25,"vehicle_id":14...26," the correct parameter is the FIRST number.
+
 
 ### Index
 

@@ -1,4 +1,4 @@
-## Splunk Twilio Modular Alert v0.7
+## Splunk Twilio Modular Alert v0.8
 
 ## Overview
 

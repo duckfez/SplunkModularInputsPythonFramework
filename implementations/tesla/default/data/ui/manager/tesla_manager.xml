@@ -131,7 +131,7 @@
 
 					<view name="edit" />
 					<view name="create" />
-					<key name="exampleText">Polling interval in seconds , defaults to 60</key>
+					<key name="exampleText">Polling interval in seconds , defaults to 300(seconds)</key>
 				</element>
                 
 
